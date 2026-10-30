@@ -29,17 +29,20 @@
 <head>
 <meta charset="UTF-8">
 <title>College Assignment Tracker</title>
+
 <style>
     body {
         font-family: Arial, sans-serif;
         background: #eef2f7;
         margin: 0;
     }
+
     header {
         background: #244b8a;
         color: white;
         padding: 20px 35px;
     }
+
     main {
         max-width: 1000px;
         margin: 30px auto;
@@ -47,13 +50,18 @@
         padding: 30px;
         border-radius: 12px;
     }
-    h2 { color: #244b8a; }
+
+    h2 {
+        color: #244b8a;
+    }
+
     input, select {
         padding: 9px;
         margin: 4px;
         border: 1px solid #ccc;
         border-radius: 6px;
     }
+
     button {
         padding: 9px 15px;
         background: #244b8a;
@@ -62,30 +70,55 @@
         border-radius: 6px;
         cursor: pointer;
     }
+
     .section {
         border: 1px solid #ddd;
         padding: 20px;
         margin-top: 20px;
         border-radius: 8px;
     }
-    li { padding: 10px 0; }
+
+    li {
+        padding: 10px 0;
+    }
+
     .item {
         margin-bottom: 12px;
         border-bottom: 1px solid #eee;
         padding-bottom: 12px;
     }
+
     .actions {
         margin-top: 8px;
     }
+
     .actions form {
         display: inline-block;
         margin: 3px;
     }
-    .green { background: #27864a; }
-    .red { background: #b53d3d; }
-    .gray { background: #777; }
-    .completed { color: #27864a; font-weight: bold; }
-    .pending { color: #ad6511; font-weight: bold; }
+
+    .green {
+        background: #27864a;
+    }
+
+    .red {
+        background: #b53d3d;
+    }
+
+    .gray {
+        background: #777;
+    }
+
+    .completed {
+        color: #27864a;
+        font-weight: bold;
+    }
+
+    .pending {
+        color: #ad6511;
+        font-weight: bold;
+    }
+
     .edit-form {
         display: none;
         margin-top: 10px;
@@ -109,27 +142,69 @@
 </head>
 
 <body>
+
 <header>
     <h1>College Assignment Tracker</h1>
 </header>
 
 <main>
+
 <h2>Student Dashboard</h2>
 <p>Manage your courses and assignments.</p>
 
+<!-- PROFILE MANAGEMENT -->
+
+<div class="section">
+    <h2>My Profile</h2>
+
+    <form action="profile" method="post">
+        <label for="fullName">Full name</label>
+        <input id="fullName"
+               type="text"
+               name="fullName"
+               maxlength="150"
+               required>
+
+        <label for="email">Email</label>
+        <input id="email"
+               type="email"
+               name="email"
+               maxlength="255"
+               required>
+
+        <button type="submit">Save Profile</button>
+    </form>
+
+    <% if ("updated".equals(request.getParameter("profile"))) { %>
+        <p class="completed">Profile saved.</p>
+    <% } %>
+</div>
+
+<!-- ADD COURSE -->
+
 <div class="section">
     <h2>Add a Course</h2>
+
     <form action="courses" method="post">
         <input type="hidden" name="action" value="add">
-        <input type="text" name="courseName"
-               placeholder="Course name" maxlength="150" required>
+
+        <input type="text"
+               name="courseName"
+               placeholder="Course name"
+               maxlength="150"
+               required>
+
         <button type="submit">Add Course</button>
     </form>
 </div>
 
+<!-- MY COURSES -->
+
 <div class="section">
 <h2>My Courses</h2>
+
 <ul>
+
 <%
 try (Connection conn = Database.getConnection();
      PreparedStatement stmt = conn.prepareStatement(
@@ -144,57 +219,83 @@ try (Connection conn = Database.getConnection();
             String courseName = escapeHtml(
                 rs.getString("course_name"));
 %>
+
 <li class="item">
     <strong><%= courseName %></strong>
 
     <div class="actions">
+
         <button type="button"
                 onclick="toggleEdit('course-<%= courseId %>')">
             Edit
         </button>
 
-        <form action="courses" method="post"
+        <form action="courses"
+              method="post"
               onsubmit="return confirmDelete('Delete this course and all its assignments?');">
-            <input type="hidden" name="action" value="delete">
-            <input type="hidden" name="courseId"
+
+            <input type="hidden"
+                   name="action"
+                   value="delete">
+
+            <input type="hidden"
+                   name="courseId"
                    value="<%= courseId %>">
-            <button type="submit" class="red">Delete</button>
+
+            <button type="submit" class="red">
+                Delete
+            </button>
         </form>
     </div>
 
     <form id="course-<%= courseId %>"
           class="edit-form"
-          action="courses" method="post">
+          action="courses"
+          method="post">
 
-        <input type="hidden" name="action" value="edit">
-        <input type="hidden" name="courseId"
+        <input type="hidden"
+               name="action"
+               value="edit">
+
+        <input type="hidden"
+               name="courseId"
                value="<%= courseId %>">
 
-        <input type="text" name="courseName"
+        <input type="text"
+               name="courseName"
                value="<%= courseName %>"
-               maxlength="150" required>
+               maxlength="150"
+               required>
 
         <button type="submit" class="green">
             Save Changes
         </button>
     </form>
 </li>
+
 <%
         }
     }
 }
 %>
+
 </ul>
 </div>
+
+<!-- ADD ASSIGNMENT -->
 
 <div class="section">
 <h2>Add an Assignment</h2>
 
 <form action="assignments" method="post">
-    <input type="hidden" name="action" value="add">
+
+    <input type="hidden"
+           name="action"
+           value="add">
 
     <select name="courseId" required>
         <option value="">Select a course</option>
+
 <%
 try (Connection conn = Database.getConnection();
      PreparedStatement stmt = conn.prepareStatement(
@@ -206,27 +307,38 @@ try (Connection conn = Database.getConnection();
     try (ResultSet rs = stmt.executeQuery()) {
         while (rs.next()) {
 %>
+
         <option value="<%= rs.getInt("id") %>">
             <%= escapeHtml(rs.getString("course_name")) %>
         </option>
+
 <%
         }
     }
 }
 %>
+
     </select>
 
-    <input type="text" name="title"
+    <input type="text"
+           name="title"
            placeholder="Assignment title"
-           maxlength="200" required>
+           maxlength="200"
+           required>
+
     <input type="date" name="dueDate">
+
     <button type="submit">Add Assignment</button>
 </form>
 </div>
 
+<!-- MY ASSIGNMENTS -->
+
 <div class="section">
 <h2>My Assignments</h2>
+
 <ul>
+
 <%
 try (Connection conn = Database.getConnection();
      PreparedStatement stmt = conn.prepareStatement(
@@ -241,20 +353,27 @@ try (Connection conn = Database.getConnection();
 
     try (ResultSet rs = stmt.executeQuery()) {
         while (rs.next()) {
+
             int assignmentId = rs.getInt("id");
             int currentCourseId = rs.getInt("course_id");
+
             String title = escapeHtml(rs.getString("title"));
             String courseName = escapeHtml(
                 rs.getString("course_name"));
+
             Date due = rs.getDate("due_date");
             String dueDate = due == null ? "" : due.toString();
+
             boolean completed = rs.getBoolean("completed");
 %>
+
 <li class="item">
+
     <strong><%= title %></strong>
     — <%= courseName %>
     — Due: <%= dueDate.isEmpty() ? "No date" : dueDate %>
     —
+
     <% if (completed) { %>
         <span class="completed">Completed</span>
     <% } else { %>
@@ -262,11 +381,17 @@ try (Connection conn = Database.getConnection();
     <% } %>
 
     <div class="actions">
+
         <form action="assignments" method="post">
-            <input type="hidden" name="action"
+
+            <input type="hidden"
+                   name="action"
                    value="<%= completed ? "pending" : "complete" %>">
-            <input type="hidden" name="assignmentId"
+
+            <input type="hidden"
+                   name="assignmentId"
                    value="<%= assignmentId %>">
+
             <button type="submit" class="green">
                 <%= completed ? "Mark Pending" : "Mark Complete" %>
             </button>
@@ -277,24 +402,41 @@ try (Connection conn = Database.getConnection();
             Edit
         </button>
 
-        <form action="assignments" method="post"
+        <form action="assignments"
+              method="post"
               onsubmit="return confirmDelete('Delete this assignment?');">
-            <input type="hidden" name="action" value="delete">
-            <input type="hidden" name="assignmentId"
+
+            <input type="hidden"
+                   name="action"
+                   value="delete">
+
+            <input type="hidden"
+                   name="assignmentId"
                    value="<%= assignmentId %>">
-            <button type="submit" class="red">Delete</button>
+
+            <button type="submit" class="red">
+                Delete
+            </button>
         </form>
     </div>
 
+    <!-- EDIT ASSIGNMENT -->
+
     <form id="assignment-<%= assignmentId %>"
           class="edit-form"
-          action="assignments" method="post">
+          action="assignments"
+          method="post">
 
-        <input type="hidden" name="action" value="edit">
-        <input type="hidden" name="assignmentId"
+        <input type="hidden"
+               name="action"
+               value="edit">
+
+        <input type="hidden"
+               name="assignmentId"
                value="<%= assignmentId %>">
 
         <select name="courseId" required>
+
 <%
         try (Connection courseConn = Database.getConnection();
              PreparedStatement courseStmt =
@@ -308,39 +450,53 @@ try (Connection conn = Database.getConnection();
                 while (courseRs.next()) {
                     int optionId = courseRs.getInt("id");
 %>
+
             <option value="<%= optionId %>"
                 <%= optionId == currentCourseId ? "selected" : "" %>>
                 <%= escapeHtml(courseRs.getString("course_name")) %>
             </option>
+
 <%
                 }
             }
         }
 %>
+
         </select>
 
-        <input type="text" name="title"
+        <input type="text"
+               name="title"
                value="<%= title %>"
-               maxlength="200" required>
+               maxlength="200"
+               required>
 
-        <input type="date" name="dueDate"
+        <input type="date"
+               name="dueDate"
                value="<%= dueDate %>">
 
         <button type="submit" class="green">
             Save Changes
         </button>
     </form>
+
 </li>
+
 <%
         }
     }
 }
 %>
+
 </ul>
 </div>
 
+<!-- LOGOUT -->
+
 <form action="auth" method="post">
-    <input type="hidden" name="action" value="logout">
+    <input type="hidden"
+           name="action"
+           value="logout">
+
     <button type="submit">Logout</button>
 </form>
 
