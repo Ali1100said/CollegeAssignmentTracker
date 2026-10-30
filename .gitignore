@@ -1,0 +1,9 @@
+target/
+*.class
+*.war
+collegetrackerdb.properties
+collegetrackerdb.script
+collegetrackerdb.log
+collegetrackerdb.lck
+collegetrackerdb.tmp/
+.env
