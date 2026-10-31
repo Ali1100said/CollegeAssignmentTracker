@@ -209,7 +209,7 @@ public class AuthServlet extends HttpServlet {
                         "username", username
                     );
 
-                    response.sendRedirect("dashboard.jsp");
+                    response.sendRedirect("dashboard");
 
                 } else {
                     response.sendRedirect(

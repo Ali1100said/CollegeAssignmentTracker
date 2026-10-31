@@ -138,7 +138,7 @@ public class AssignmentServlet extends HttpServlet {
                 return;
             }
 
-            response.sendRedirect("dashboard.jsp");
+            response.sendRedirect("dashboard");
 
         } catch (IllegalArgumentException e) {
             response.sendError(400, "Invalid assignment information.");

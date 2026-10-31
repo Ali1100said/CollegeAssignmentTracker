@@ -51,7 +51,7 @@ public class ProfileServlet extends HttpServlet {
                 stmt.executeUpdate();
             }
 
-            response.sendRedirect("dashboard.jsp?profile=updated");
+            response.sendRedirect("dashboard?profile=updated");
 
         } catch (SQLException e) {
             throw new ServletException("Unable to update profile.", e);
