@@ -2,8 +2,6 @@
 package com.collegetracker;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -14,6 +12,8 @@ import javax.servlet.http.HttpSession;
 
 @WebServlet("/profile")
 public class ProfileServlet extends HttpServlet {
+
+    private final StudentDao studentDao = new StudentDao();
 
     @Override
     protected void doPost(HttpServletRequest request,
@@ -41,17 +41,14 @@ public class ProfileServlet extends HttpServlet {
         try {
             DatabaseSetup.initialize();
 
-            try (Connection conn = Database.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(
-                     "UPDATE students SET full_name = ?, email = ? WHERE id = ?")) {
-
-                stmt.setString(1, fullName.trim());
-                stmt.setString(2, email.trim());
-                stmt.setInt(3, studentId);
-                stmt.executeUpdate();
+            boolean updated = studentDao.updateProfile(
+                studentId, fullName.trim(), email.trim().toLowerCase());
+            if (!updated) {
+                response.sendError(404, "Profile not found.");
+                return;
             }
 
-            response.sendRedirect("dashboard.jsp?profile=updated");
+            response.sendRedirect("dashboard?profile=updated");
 
         } catch (SQLException e) {
             throw new ServletException("Unable to update profile.", e);

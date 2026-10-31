@@ -1,8 +1,6 @@
 package com.collegetracker;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Date;
 
@@ -15,6 +13,8 @@ import javax.servlet.http.HttpSession;
 
 @WebServlet("/assignments")
 public class AssignmentServlet extends HttpServlet {
+
+    private final AssignmentDao assignmentDao = new AssignmentDao();
 
     @Override
     protected void doPost(HttpServletRequest request,
@@ -47,22 +47,10 @@ public class AssignmentServlet extends HttpServlet {
                     return;
                 }
 
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement stmt = conn.prepareStatement(
-                         "INSERT INTO assignments " +
-                         "(course_id, title, due_date) " +
-                         "SELECT id, ?, ? FROM courses " +
-                         "WHERE id = ? AND student_id = ?")) {
-
-                    stmt.setString(1, title.trim());
-                    setDueDate(stmt, 2, dueDate);
-                    stmt.setInt(3, courseId);
-                    stmt.setInt(4, studentId);
-
-                    if (stmt.executeUpdate() == 0) {
-                        response.sendError(403, "Course not found.");
-                        return;
-                    }
+                if (!assignmentDao.add(studentId, courseId, title.trim(),
+                        parseDueDate(dueDate))) {
+                    response.sendError(403, "Course not found.");
+                    return;
                 }
 
             } else if ("edit".equals(action)) {
@@ -79,25 +67,8 @@ public class AssignmentServlet extends HttpServlet {
                     return;
                 }
 
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement stmt = conn.prepareStatement(
-                         "UPDATE assignments SET course_id = ?, " +
-                         "title = ?, due_date = ? " +
-                         "WHERE id = ? " +
-                         "AND course_id IN " +
-                         "(SELECT id FROM courses WHERE student_id = ?) " +
-                         "AND EXISTS (SELECT 1 FROM courses " +
-                         "WHERE id = ? AND student_id = ?)")) {
-
-                    stmt.setInt(1, courseId);
-                    stmt.setString(2, title.trim());
-                    setDueDate(stmt, 3, dueDate);
-                    stmt.setInt(4, assignmentId);
-                    stmt.setInt(5, studentId);
-                    stmt.setInt(6, courseId);
-                    stmt.setInt(7, studentId);
-                    stmt.executeUpdate();
-                }
+                assignmentDao.update(studentId, assignmentId, courseId,
+                    title.trim(), parseDueDate(dueDate));
 
             } else if ("complete".equals(action)
                     || "pending".equals(action)) {
@@ -105,40 +76,22 @@ public class AssignmentServlet extends HttpServlet {
                 int assignmentId = Integer.parseInt(
                     request.getParameter("assignmentId"));
 
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement stmt = conn.prepareStatement(
-                         "UPDATE assignments SET completed = ? " +
-                         "WHERE id = ? AND course_id IN " +
-                         "(SELECT id FROM courses WHERE student_id = ?)")) {
-
-                    stmt.setBoolean(1, "complete".equals(action));
-                    stmt.setInt(2, assignmentId);
-                    stmt.setInt(3, studentId);
-                    stmt.executeUpdate();
-                }
+                assignmentDao.setCompleted(studentId, assignmentId,
+                    "complete".equals(action));
 
             } else if ("delete".equals(action)) {
 
                 int assignmentId = Integer.parseInt(
                     request.getParameter("assignmentId"));
 
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement stmt = conn.prepareStatement(
-                         "DELETE FROM assignments " +
-                         "WHERE id = ? AND course_id IN " +
-                         "(SELECT id FROM courses WHERE student_id = ?)")) {
-
-                    stmt.setInt(1, assignmentId);
-                    stmt.setInt(2, studentId);
-                    stmt.executeUpdate();
-                }
+                assignmentDao.delete(studentId, assignmentId);
 
             } else {
                 response.sendError(400, "Invalid action.");
                 return;
             }
 
-            response.sendRedirect("dashboard.jsp");
+            response.sendRedirect("dashboard");
 
         } catch (IllegalArgumentException e) {
             response.sendError(400, "Invalid assignment information.");
@@ -153,14 +106,8 @@ public class AssignmentServlet extends HttpServlet {
                 && title.length() <= 200;
     }
 
-    private void setDueDate(PreparedStatement stmt,
-                            int position, String dueDate)
-            throws SQLException {
-
-        if (dueDate == null || dueDate.isBlank()) {
-            stmt.setNull(position, java.sql.Types.DATE);
-        } else {
-            stmt.setDate(position, Date.valueOf(dueDate));
-        }
+    private Date parseDueDate(String dueDate) {
+        return dueDate == null || dueDate.isBlank()
+            ? null : Date.valueOf(dueDate);
     }
 }
