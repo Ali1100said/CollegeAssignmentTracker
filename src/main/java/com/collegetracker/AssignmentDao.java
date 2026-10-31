@@ -50,4 +50,63 @@ public class AssignmentDao {
 
         return assignments;
     }
+
+    public boolean add(int studentId, int courseId, String title, Date dueDate)
+            throws SQLException {
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                 "INSERT INTO assignments (course_id, title, due_date) " +
+                 "SELECT id, ?, ? FROM courses WHERE id = ? AND student_id = ?")) {
+            stmt.setString(1, title);
+            if (dueDate == null) stmt.setNull(2, java.sql.Types.DATE);
+            else stmt.setDate(2, dueDate);
+            stmt.setInt(3, courseId);
+            stmt.setInt(4, studentId);
+            return stmt.executeUpdate() == 1;
+        }
+    }
+
+    public boolean update(int studentId, int assignmentId, int courseId,
+                          String title, Date dueDate) throws SQLException {
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                 "UPDATE assignments SET course_id = ?, title = ?, due_date = ? " +
+                 "WHERE id = ? AND course_id IN " +
+                 "(SELECT id FROM courses WHERE student_id = ?) " +
+                 "AND EXISTS (SELECT 1 FROM courses WHERE id = ? AND student_id = ?)")) {
+            stmt.setInt(1, courseId);
+            stmt.setString(2, title);
+            if (dueDate == null) stmt.setNull(3, java.sql.Types.DATE);
+            else stmt.setDate(3, dueDate);
+            stmt.setInt(4, assignmentId);
+            stmt.setInt(5, studentId);
+            stmt.setInt(6, courseId);
+            stmt.setInt(7, studentId);
+            return stmt.executeUpdate() == 1;
+        }
+    }
+
+    public boolean setCompleted(int studentId, int assignmentId,
+                                boolean completed) throws SQLException {
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                 "UPDATE assignments SET completed = ? WHERE id = ? " +
+                 "AND course_id IN (SELECT id FROM courses WHERE student_id = ?)")) {
+            stmt.setBoolean(1, completed);
+            stmt.setInt(2, assignmentId);
+            stmt.setInt(3, studentId);
+            return stmt.executeUpdate() == 1;
+        }
+    }
+
+    public boolean delete(int studentId, int assignmentId) throws SQLException {
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                 "DELETE FROM assignments WHERE id = ? AND course_id IN " +
+                 "(SELECT id FROM courses WHERE student_id = ?)")) {
+            stmt.setInt(1, assignmentId);
+            stmt.setInt(2, studentId);
+            return stmt.executeUpdate() == 1;
+        }
+    }
 }

@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS students (
     full_name VARCHAR(150),
     reset_token_hash VARCHAR(255),
     reset_token_expires TIMESTAMP,
-    verification_token_hash VARCHAR(255)
+    verification_token_hash VARCHAR(255),
+    verification_token_expires TIMESTAMP
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_students_email

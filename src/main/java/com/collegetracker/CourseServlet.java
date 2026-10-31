@@ -1,8 +1,6 @@
 package com.collegetracker;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import javax.servlet.ServletException;
@@ -14,6 +12,8 @@ import javax.servlet.http.HttpSession;
 
 @WebServlet("/courses")
 public class CourseServlet extends HttpServlet {
+
+    private final CourseDao courseDao = new CourseDao();
 
     @Override
     protected void doPost(HttpServletRequest request,
@@ -48,15 +48,7 @@ public class CourseServlet extends HttpServlet {
                     return;
                 }
 
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement stmt = conn.prepareStatement(
-                         "INSERT INTO courses (student_id, course_name) " +
-                         "VALUES (?, ?)")) {
-
-                    stmt.setInt(1, studentId);
-                    stmt.setString(2, name.trim());
-                    stmt.executeUpdate();
-                }
+                courseDao.add(studentId, name.trim());
 
             } else if ("edit".equals(action)) {
 
@@ -70,55 +62,14 @@ public class CourseServlet extends HttpServlet {
                     return;
                 }
 
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement stmt = conn.prepareStatement(
-                         "UPDATE courses SET course_name = ? " +
-                         "WHERE id = ? AND student_id = ?")) {
-
-                    stmt.setString(1, name.trim());
-                    stmt.setInt(2, courseId);
-                    stmt.setInt(3, studentId);
-                    stmt.executeUpdate();
-                }
+                courseDao.update(studentId, courseId, name.trim());
 
             } else if ("delete".equals(action)) {
 
                 int courseId = Integer.parseInt(
                     request.getParameter("courseId"));
 
-                try (Connection conn = Database.getConnection()) {
-                    conn.setAutoCommit(false);
-
-                    try {
-                        try (PreparedStatement stmt =
-                                conn.prepareStatement(
-                                "DELETE FROM assignments " +
-                                "WHERE course_id = ? AND course_id IN " +
-                                "(SELECT id FROM courses " +
-                                "WHERE student_id = ?)")) {
-
-                            stmt.setInt(1, courseId);
-                            stmt.setInt(2, studentId);
-                            stmt.executeUpdate();
-                        }
-
-                        try (PreparedStatement stmt =
-                                conn.prepareStatement(
-                                "DELETE FROM courses " +
-                                "WHERE id = ? AND student_id = ?")) {
-
-                            stmt.setInt(1, courseId);
-                            stmt.setInt(2, studentId);
-                            stmt.executeUpdate();
-                        }
-
-                        conn.commit();
-
-                    } catch (SQLException e) {
-                        conn.rollback();
-                        throw e;
-                    }
-                }
+                courseDao.delete(studentId, courseId);
 
             } else {
                 response.sendError(400, "Invalid action.");

@@ -28,7 +28,8 @@ public class DatabaseSetup {
                 "full_name VARCHAR(150), " +
                 "reset_token_hash VARCHAR(255), " +
                 "reset_token_expires TIMESTAMP, " +
-                "verification_token_hash VARCHAR(255))"
+                "verification_token_hash VARCHAR(255), " +
+                "verification_token_expires TIMESTAMP)"
             );
 
             addColumnIfMissing(conn, "STUDENTS", "EMAIL",
@@ -43,6 +44,8 @@ public class DatabaseSetup {
                 "TIMESTAMP");
             addColumnIfMissing(conn, "STUDENTS", "VERIFICATION_TOKEN_HASH",
                 "VARCHAR(255)");
+            addColumnIfMissing(conn, "STUDENTS", "VERIFICATION_TOKEN_EXPIRES",
+                "TIMESTAMP");
 
             stmt.executeUpdate(
                 "CREATE UNIQUE INDEX IF NOT EXISTS " +
