@@ -67,8 +67,11 @@ public class AssignmentServlet extends HttpServlet {
                     return;
                 }
 
-                assignmentDao.update(studentId, assignmentId, courseId,
-                    title.trim(), parseDueDate(dueDate));
+                if (!assignmentDao.update(studentId, assignmentId, courseId,
+                        title.trim(), parseDueDate(dueDate))) {
+                    response.sendError(403, "Assignment or course not found.");
+                    return;
+                }
 
             } else if ("complete".equals(action)
                     || "pending".equals(action)) {
@@ -76,15 +79,21 @@ public class AssignmentServlet extends HttpServlet {
                 int assignmentId = Integer.parseInt(
                     request.getParameter("assignmentId"));
 
-                assignmentDao.setCompleted(studentId, assignmentId,
-                    "complete".equals(action));
+                if (!assignmentDao.setCompleted(studentId, assignmentId,
+                        "complete".equals(action))) {
+                    response.sendError(403, "Assignment not found.");
+                    return;
+                }
 
             } else if ("delete".equals(action)) {
 
                 int assignmentId = Integer.parseInt(
                     request.getParameter("assignmentId"));
 
-                assignmentDao.delete(studentId, assignmentId);
+                if (!assignmentDao.delete(studentId, assignmentId)) {
+                    response.sendError(403, "Assignment not found.");
+                    return;
+                }
 
             } else {
                 response.sendError(400, "Invalid action.");

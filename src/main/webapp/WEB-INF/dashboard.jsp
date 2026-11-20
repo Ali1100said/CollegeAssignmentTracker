@@ -25,6 +25,8 @@
     List<AssignmentDao.AssignmentView> assignments =
         (List<AssignmentDao.AssignmentView>)
             request.getAttribute("assignments");
+
+    String sortKey = (String) request.getAttribute("sortKey");
 %>
 
 <!DOCTYPE html>
@@ -213,6 +215,15 @@
 
 <div class="section">
 <h2>My Assignments</h2>
+<form action="dashboard" method="get">
+    <label for="sort">Sort assignments by</label>
+    <select id="sort" name="sort" onchange="this.form.submit()">
+        <option value="dueDate" <%= "dueDate".equals(sortKey) ? "selected" : "" %>>Due date</option>
+        <option value="title" <%= "title".equals(sortKey) ? "selected" : "" %>>Title</option>
+        <option value="completion" <%= "completion".equals(sortKey) ? "selected" : "" %>>Completion status</option>
+    </select>
+    <noscript><button type="submit">Apply Sort</button></noscript>
+</form>
 <ul>
 <% for (AssignmentDao.AssignmentView assignment : assignments) {
        String dueDate = assignment.dueDate() == null
