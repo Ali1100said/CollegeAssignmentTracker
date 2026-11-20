@@ -10,12 +10,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.collegetracker.service.DashboardFacade;
+import com.collegetracker.service.DashboardFacade.DashboardData;
+
 @WebServlet("/dashboard")
 public class DashboardServlet extends HttpServlet {
 
-    private final StudentDao studentDao = new StudentDao();
-    private final CourseDao courseDao = new CourseDao();
-    private final AssignmentDao assignmentDao = new AssignmentDao();
+    private final DashboardFacade dashboardFacade = new DashboardFacade();
 
     @Override
     protected void doGet(HttpServletRequest request,
@@ -34,15 +35,12 @@ public class DashboardServlet extends HttpServlet {
         try {
             DatabaseSetup.initialize();
 
-            request.setAttribute(
-                "profile", studentDao.findProfile(studentId)
-            );
-            request.setAttribute(
-                "courses", courseDao.findByStudent(studentId)
-            );
-            request.setAttribute(
-                "assignments", assignmentDao.findByStudent(studentId)
-            );
+            DashboardData data = dashboardFacade.loadDashboard(
+                studentId, request.getParameter("sort"));
+            request.setAttribute("profile", data.profile());
+            request.setAttribute("courses", data.courses());
+            request.setAttribute("assignments", data.assignments());
+            request.setAttribute("sortKey", data.sortKey());
 
             request.getRequestDispatcher("/WEB-INF/dashboard.jsp")
                    .forward(request, response);

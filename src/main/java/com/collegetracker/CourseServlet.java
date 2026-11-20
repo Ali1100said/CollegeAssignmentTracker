@@ -62,14 +62,20 @@ public class CourseServlet extends HttpServlet {
                     return;
                 }
 
-                courseDao.update(studentId, courseId, name.trim());
+                if (!courseDao.update(studentId, courseId, name.trim())) {
+                    response.sendError(403, "Course not found.");
+                    return;
+                }
 
             } else if ("delete".equals(action)) {
 
                 int courseId = Integer.parseInt(
                     request.getParameter("courseId"));
 
-                courseDao.delete(studentId, courseId);
+                if (!courseDao.delete(studentId, courseId)) {
+                    response.sendError(403, "Course not found.");
+                    return;
+                }
 
             } else {
                 response.sendError(400, "Invalid action.");
